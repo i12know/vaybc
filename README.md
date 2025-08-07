@@ -58,8 +58,9 @@ A customized Jeopardy-style PowerPoint game system specifically designed for VAY
    ```
 
 2. **Choose your template:**
-   - **For Official Competition:** `PowerPoint_Files/VAY_Bible_Challenge_Official.pptm` (3 players, 5 categories)
-   - **For Practice/Training:** `PowerPoint_Files/VAY_Bible_Challenge_Practice.pptm` (8 players, 6 categories)
+   - **For Official Competition:** `PowerPoint_Files/VAY_Bible_Challenge_Official3teams.pptm` (3 players, 5 categories)
+   - **For Practice/Training:** `PowerPoint_Files/VAY_Bible_Challenge_Practice8players.pptm` (8 players, 6 categories)
+   - Place required sound files (`JeopardyTheme.mp3`, `Time-Up.wav`, `JeopardyBoardFill.wav`) in the same `PowerPoint_Files` folder as the chosen `.pptm`.
 
 3. **Open the PowerPoint file:**
    - **Enable macros** when prompted by PowerPoint
@@ -74,7 +75,7 @@ A customized Jeopardy-style PowerPoint game system specifically designed for VAY
 ### Basic Usage
 
 1. **Setup Questions:**
-   - Use the Excel template in `Templates/JeopardyQuestionTemplate.xlsx`
+   - Use the Excel template `Templates/VAY_Bible_Challenge_Practice.xlsx`
    - Fill in categories, values, questions, and answers
    - Run `ImportFromExcel()` macro to load questions
 
@@ -151,7 +152,7 @@ Questions should be formatted in Excel as:
 - **Column E:** Additional Comments
 
 **Template Files:**
-- `JeopardyQuestionTemplate.xlsx` - Fill out 5 categories instead of 6 for official competitions
+- `VAY_Bible_Challenge_Practice.xlsx` - Fill out 5 categories instead of 6 for official competitions
 
 ## 📁 Repository Structure
 
@@ -162,10 +163,11 @@ VAY-Bible-Challenge/
 │   ├── TimerModule.bas          # Countdown timer implementation
 │   └── UserForms/               # Score adjustment dialogs
 ├── PowerPoint_Files/
-│   ├── VAY_Bible_Challenge_Official.pptm    # 3 players, 5 categories
-│   └── VAY_Bible_Challenge_Practice.pptm    # 8 players, 6 categories
+│   ├── VAY_Bible_Challenge_Official3teams.pptm    # 3 players, 5 categories
+│   ├── VAY_Bible_Challenge_Practice8players.pptm  # 8 players, 6 categories
+│   └── [place sound files here: JeopardyTheme.mp3, Time-Up.wav, JeopardyBoardFill.wav]
 ├── Templates/
-│   └── JeopardyQuestionTemplate.xlsx    # Fill out 5 categories instead of 6 for official competitions
+│   └── VAY_Bible_Challenge_Practice.xlsx    # Example question template (fill out 5 categories instead of 6 for official competitions)
 ├── Documentation/
 │   ├── PowerPoint_Structure.md   # Detailed slide layout for both versions
 │   ├── Installation_Guide.md     # Step-by-step setup
