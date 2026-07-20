@@ -1,0 +1,9 @@
+# Office lock/temp files
+~$*.pptm
+~$*.pptx
+~$*.xlsx
+~$*.xlsm
+
+# OS cruft
+.DS_Store
+Thumbs.db

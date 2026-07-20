@@ -58,8 +58,8 @@ A customized Jeopardy-style PowerPoint game system specifically designed for VAY
    ```
 
 2. **Choose your template:**
-   - **For Official Competition:** `PowerPoint_Files/VAY_Bible_Challenge_Official.pptm` (3 players, 5 categories)
-   - **For Practice/Training:** `PowerPoint_Files/VAY_Bible_Challenge_Practice.pptm` (8 players, 6 categories)
+   - **For Official Competition:** `PowerPoint_Files/VAY_Bible_Challenge_Official3teams.pptm` (3 players, 5 categories)
+   - **For Practice/Training:** `PowerPoint_Files/VAY_Bible_Challenge_Practice8players.pptm` (8 players, 6 categories)
 
 3. **Open the PowerPoint file:**
    - **Enable macros** when prompted by PowerPoint
@@ -74,7 +74,7 @@ A customized Jeopardy-style PowerPoint game system specifically designed for VAY
 ### Basic Usage
 
 1. **Setup Questions:**
-   - Use the Excel template in `Templates/JeopardyQuestionTemplate.xlsx`
+   - Use the Excel template in `Templates/VAY_Bible_Challenge_Practice.xlsx`
    - Fill in categories, values, questions, and answers
    - Run `ImportFromExcel()` macro to load questions
 
@@ -130,16 +130,18 @@ Private Function sNameOfPlayer(playerNo As Integer) As String
 End Function
 ```
 
-### Adding Countdown Timer
+### Countdown Timer
 
-The repository includes an enhanced timer system. To implement:
+The Slide Master includes a 5-stage visual timer (shapes named `timerLight1a/1b` through `timerLight5`) that counts down by extinguishing lights as time passes. `DufJeopardy.bas` has `setTimerDelay()`, which prompts for a total delay and distributes it evenly across the lights' animation exit triggers:
 
 ```vba
-' Add to your question display routine
-Sub StartCountdownTimer()
-    ' Timer implementation - see VBA/TimerModule.bas
+Sub setTimerDelay()
+    ' Run manually from the VBA editor; sets the countdown duration
+    ' for the timerLight shapes on both the Slide Master and Title Master
 End Sub
 ```
+
+Note: this is a light-based timer, not a numeric on-screen countdown — see Future Enhancements below.
 
 ### Excel Template Format
 
@@ -151,27 +153,26 @@ Questions should be formatted in Excel as:
 - **Column E:** Additional Comments
 
 **Template Files:**
-- `JeopardyQuestionTemplate.xlsx` - Fill out 5 categories instead of 6 for official competitions
+- `VAY_Bible_Challenge_Practice.xlsx` - Fill out 5 categories instead of 6 for official competitions
 
 ## 📁 Repository Structure
 
 ```
-VAY-Bible-Challenge/
+vaybc/
 ├── VBA/
-│   ├── Module1.bas              # Main game logic (shared by both templates)
-│   ├── TimerModule.bas          # Countdown timer implementation
-│   └── UserForms/               # Score adjustment dialogs
+│   ├── DufJeopardy.bas               # Main game logic (shared by both templates)
+│   ├── copying.bas                   # GPL-3.0 license text
+│   └── AdjustScoresBox.frm/.frx      # Manual score adjustment dialog
 ├── PowerPoint_Files/
-│   ├── VAY_Bible_Challenge_Official.pptm    # 3 players, 5 categories
-│   └── VAY_Bible_Challenge_Practice.pptm    # 8 players, 6 categories
+│   ├── VAY_Bible_Challenge_Official3teams.pptm    # 3 players, 5 categories
+│   └── VAY_Bible_Challenge_Practice8players.pptm  # 8 players, 6 categories
 ├── Templates/
-│   └── JeopardyQuestionTemplate.xlsx    # Fill out 5 categories instead of 6 for official competitions
+│   └── VAY_Bible_Challenge_Practice.xlsx    # Fill out 5 categories instead of 6 for official competitions
 ├── Documentation/
-│   ├── PowerPoint_Structure.md   # Detailed slide layout for both versions
-│   ├── Installation_Guide.md     # Step-by-step setup
-│   └── Customization_Guide.md    # Advanced modifications
+│   └── Bible_Challenge/
+│       └── MakingBCQuestions.md      # Guide for writing "irrefutable" trivia questions
 ├── docs/
-│   └── images/                   # Screenshots and diagrams
+│   └── images/                       # Screenshots and diagrams
 └── README.md
 ```
 

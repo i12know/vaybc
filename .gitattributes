@@ -1,0 +1,9 @@
+# Office and binary files: never text-diff or line-ending-normalize these
+*.pptm binary
+*.ppt binary
+*.pptx binary
+*.xlsm binary
+*.xls binary
+*.xlsx binary
+*.frx binary
+*.webp binary
