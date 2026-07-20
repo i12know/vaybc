@@ -266,9 +266,15 @@ With ActivePresentation.Slides(ActivePresentation.Slides.Count)
     .Shapes.Placeholders(2).TextFrame.TextRange.InsertAfter ("Player " & player & sNameOfPlayer(player) & " @" & numberToLetter(getSlideColumn) & getSlideRow & ": " & (direction * iSlideValue) & " from " & nValue & " = " & newValue & Chr(13))
 End With
 
-' Go to the next slide if that's what's supposed to happen
+' Countdown timer: a wrong answer opens a re-buzz window with a fresh
+' countdown; a correct answer ends the question so the timer stops.
+' ResetCountdown runs the countdown loop until it finishes or is
+' superseded, so it must stay the last statement in this routine.
 If direction = 1 Then
+    Call TimerModule.StopCountdown
     Call DefaultAction
+Else
+    Call TimerModule.ResetCountdown
 End If
 
 
@@ -389,6 +395,7 @@ Next k
 End Sub
 
 Sub ClearThisSlidesTileAndGoToNext()
+    Call TimerModule.StopCountdown
     Call hideTileOnBoard(getSlideColumn, getSlideRow)
     Call DefaultAction
 
@@ -440,6 +447,8 @@ Dim leftMargin As Integer
 Dim horizontalSpacing As Integer
 Dim topMargin As Integer
 Dim verticalSpacing As Integer
+
+Call TimerModule.StopCountdown
 
 MsgResult = MsgBox("This will reset the board and each player's score. " _
         & "Are you sure you want to do this?", vbYesNo)

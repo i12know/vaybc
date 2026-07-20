@@ -141,7 +141,13 @@ Sub setTimerDelay()
 End Sub
 ```
 
-Note: this is a light-based timer, not a numeric on-screen countdown — see Future Enhancements below.
+**Digital countdown (new):** `VBA/TimerModule.bas` adds a numeric 10-second countdown with the re-buzz rule: clicking a red Incorrect button deducts the score *and* restarts the countdown at 10 for the next contestant; a green Correct button stops it. To wire it into a deck (once, in PowerPoint on Windows):
+
+1. Import `TimerModule.bas` into the VBA project (Alt+F11 > File > Import)
+2. On the Slide Master, add a text box named `CountdownDisplay` (large bold digits, empty text)
+3. Give a Start Timer shape the action **Insert > Action > Run macro > `StartCountdown`**
+
+When time runs out the display shows **TIME!**, plays `Time-Up.wav` if present next to the presentation, and clears after a few seconds. See issue [#2](https://github.com/i12know/vaybc/issues/2) for the full design.
 
 ### Excel Template Format
 
@@ -161,6 +167,7 @@ Questions should be formatted in Excel as:
 vaybc/
 ├── VBA/
 │   ├── DufJeopardy.bas               # Main game logic (shared by both templates)
+│   ├── TimerModule.bas               # Digital 10-second countdown timer
 │   ├── copying.bas                   # GPL-3.0 license text
 │   └── AdjustScoresBox.frm/.frx      # Manual score adjustment dialog
 ├── PowerPoint_Files/
@@ -300,7 +307,7 @@ For questions about this implementation:
 
 ## 🎯 Future Enhancements
 
-- [ ] Count-down timer with numbers displayed on screen
+- [ ] Count-down timer with numbers displayed on screen — VBA done (`VBA/TimerModule.bas`); still needs wiring into both .pptm decks, see issue [#2](https://github.com/i12know/vaybc/issues/2)
 - [ ] "Revert" Button to revert the scoring should the judges approved a challenge
 
 ---
