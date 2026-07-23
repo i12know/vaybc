@@ -1,7 +1,7 @@
 # vaybc
 VAYBC is a comprehensive Jeopardy-style game PowerPoint template and VBA code that's been customized for Bible Challenge competition at VAY Sports Fest
 
-# VAY Bible Challenge 2025 - PowerPoint Game System
+# VAY Bible Challenge 2026 - PowerPoint Game System
 
 A customized Jeopardy-style PowerPoint game system specifically designed for VAY Sports Ministry's Bible Challenge competition. This interactive presentation allows for dynamic gameplay with real-time scoring, countdown timers, and automated question management.
 
