@@ -14,16 +14,16 @@ Attribute VB_Name = "DufJeopardy"
 '    Software Copyright 2009-2013 Kevin Dufendach
 '
 '    These macro module is a free module: you can redistribute it and/or modify
-'    it under the terms of the GNU General Public License as published by
+'    it under the terms of the GNU Affero General Public License as published by
 '    the Free Software Foundation, either version 3 of the License, or
 '    (at your option) any later version.
 '
 '    This module is distributed in the hope that it will be useful,
 '    but WITHOUT ANY WARRANTY; without even the implied warranty of
 '    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-'    GNU General Public License for more details.
+'    GNU Affero General Public License for more details.
 '
-'    You should have received a copy of the GNU General Public License
+'    You should have received a copy of the GNU Affero General Public License
 '    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -37,6 +37,9 @@ Private Const BOARD_LEFT = 18
 Private Const TILE_H_SPACING = 114
 Private Const TILE_V_SPACING = 78
 Private Const DOLLAR_CHARACTER = "$"
+Private Const COUNTDOWN_VIDEO_SHAPE = "CountdownVideo"
+Private Const COUNTDOWN_VIDEO_FILE = "countdown_10s_1x1.mp4"
+Private Const JEOPARDY_THEME_SHAPE = "JeopardyTheme"
 
 Sub correctPlayer1()
     Call ChangeResponse(1, 1)
@@ -240,7 +243,7 @@ For Each oObject In ActivePresentation.SlideShowWindow.View.Slide.Shapes
     End If
 Next oObject
 
-getSlideColumn = Val(VBA.Strings.Left(sText, 1))
+getSlideColumnFromValueBox = Val(VBA.Strings.Left(sText, 1))
 
 End Function
 
@@ -266,19 +269,181 @@ With ActivePresentation.Slides(ActivePresentation.Slides.Count)
     .Shapes.Placeholders(2).TextFrame.TextRange.InsertAfter ("Player " & player & sNameOfPlayer(player) & " @" & numberToLetter(getSlideColumn) & getSlideRow & ": " & (direction * iSlideValue) & " from " & nValue & " = " & newValue & Chr(13))
 End With
 
-' Countdown timer: a wrong answer opens a re-buzz window with a fresh
-' countdown; a correct answer ends the question so the timer stops.
-' ResetCountdown runs the countdown loop until it finishes or is
-' superseded, so it must stay the last statement in this routine.
+' Countdown video: a wrong answer rewinds the countdown for the next buzz-in.
+' The host starts it again by clicking the video or a StartCountdownVideo button.
 If direction = 1 Then
-    Call TimerModule.StopCountdown
+    Call StopCountdownVideo
     Call DefaultAction
 Else
-    Call TimerModule.ResetCountdown
+    Call RewindCountdownVideo
 End If
 
 
 End Sub
+
+Public Sub StartCountdownVideo()
+    Call RestartCountdownVideo
+End Sub
+
+Public Sub RewindCountdownVideo()
+    Call StopCountdownVideo
+End Sub
+
+Public Sub RestartCountdownVideo()
+Dim oShape As Shape
+Dim oPlayer As Object
+
+Set oShape = FindCountdownVideoShape()
+If oShape Is Nothing Then Exit Sub
+
+On Error Resume Next
+Set oPlayer = ActivePresentation.SlideShowWindow.View.Player(oShape.Id)
+If Not oPlayer Is Nothing Then
+    oPlayer.Stop
+    oPlayer.CurrentPosition = 0
+    oPlayer.Play
+End If
+On Error GoTo 0
+End Sub
+
+Public Sub StopCountdownVideo()
+Dim oShape As Shape
+Dim oPlayer As Object
+
+Set oShape = FindCountdownVideoShape()
+If oShape Is Nothing Then Exit Sub
+
+On Error Resume Next
+Set oPlayer = ActivePresentation.SlideShowWindow.View.Player(oShape.Id)
+If Not oPlayer Is Nothing Then
+    oPlayer.Stop
+    oPlayer.CurrentPosition = 0
+End If
+On Error GoTo 0
+End Sub
+
+Public Sub InstallLinkedCountdownVideos()
+Dim oTemplate As Shape
+Dim oSlide As Slide
+Dim oShape As Shape
+Dim sPath As String
+Dim iInstalled As Integer
+Dim iSkipped As Integer
+Dim sngLeft As Single
+Dim sngTop As Single
+Dim sngWidth As Single
+Dim sngHeight As Single
+
+If ActivePresentation.Path = "" Then
+    MsgBox "Save the PowerPoint file first, then put " & COUNTDOWN_VIDEO_FILE & _
+        " in the same folder and run this macro again.", vbExclamation
+    Exit Sub
+End If
+
+sPath = ActivePresentation.Path & "\" & COUNTDOWN_VIDEO_FILE
+If Dir(sPath) = "" Then
+    MsgBox "Could not find " & COUNTDOWN_VIDEO_FILE & " beside this PowerPoint file:" & _
+        Chr(13) & sPath, vbExclamation
+    Exit Sub
+End If
+
+Set oTemplate = FindCountdownVideoTemplateShape()
+If oTemplate Is Nothing Then
+    MsgBox "Add and position one linked video shape named " & COUNTDOWN_VIDEO_SHAPE & _
+        " first, then run this macro again.", vbExclamation
+    Exit Sub
+End If
+
+sngLeft = oTemplate.Left
+sngTop = oTemplate.Top
+sngWidth = oTemplate.Width
+sngHeight = oTemplate.Height
+
+For Each oSlide In ActivePresentation.Slides
+    If ShapeByName(oSlide.Shapes, JEOPARDY_THEME_SHAPE) Is Nothing Then
+        iSkipped = iSkipped + 1
+    Else
+        Call DeleteShapesNamed(oSlide.Shapes, COUNTDOWN_VIDEO_SHAPE)
+        On Error GoTo InstallFailed
+        Set oShape = oSlide.Shapes.AddMediaObject2(sPath, msoTrue, msoFalse, _
+            sngLeft, sngTop, sngWidth, sngHeight)
+        On Error GoTo 0
+        oShape.Name = COUNTDOWN_VIDEO_SHAPE
+        iInstalled = iInstalled + 1
+    End If
+Next oSlide
+
+MsgBox "Linked " & Trim(Str(iInstalled)) & " countdown video shape(s) to:" & _
+    Chr(13) & sPath & Chr(13) & Chr(13) & _
+    "Skipped " & Trim(Str(iSkipped)) & " slide(s) without " & JEOPARDY_THEME_SHAPE & ".", _
+    vbInformation
+Exit Sub
+
+InstallFailed:
+MsgBox "PowerPoint could not add the linked countdown video on slide " & _
+    Trim(Str(oSlide.slideIndex)) & ".", vbExclamation
+On Error GoTo 0
+End Sub
+
+Private Function FindCountdownVideoShape() As Shape
+Dim oSlide As Slide
+Dim oShape As Shape
+
+On Error Resume Next
+Set oSlide = ActivePresentation.SlideShowWindow.View.Slide
+On Error GoTo 0
+
+If oSlide Is Nothing Then Exit Function
+
+Set oShape = ShapeByName(oSlide.Shapes, COUNTDOWN_VIDEO_SHAPE)
+If Not oShape Is Nothing Then
+    Set FindCountdownVideoShape = oShape
+    Exit Function
+End If
+
+End Function
+
+Private Function FindCountdownVideoTemplateShape() As Shape
+Dim oSlide As Slide
+Dim oShape As Shape
+
+On Error Resume Next
+Set oSlide = ActiveWindow.Selection.SlideRange(1)
+If Not oSlide Is Nothing Then
+    Set oShape = ShapeByName(oSlide.Shapes, COUNTDOWN_VIDEO_SHAPE)
+End If
+On Error GoTo 0
+
+If Not oShape Is Nothing Then
+    Set FindCountdownVideoTemplateShape = oShape
+    Exit Function
+End If
+
+For Each oSlide In ActivePresentation.Slides
+    Set oShape = ShapeByName(oSlide.Shapes, COUNTDOWN_VIDEO_SHAPE)
+    If Not oShape Is Nothing Then
+        Set FindCountdownVideoTemplateShape = oShape
+        Exit Function
+    End If
+Next oSlide
+
+End Function
+
+Private Sub DeleteShapesNamed(oShapes As Shapes, sName As String)
+Dim oShape As Shape
+
+Do
+    Set oShape = ShapeByName(oShapes, sName)
+    If oShape Is Nothing Then Exit Do
+    oShape.Delete
+Loop
+End Sub
+
+Private Function ShapeByName(oShapes As Shapes, sName As String) As Shape
+On Error Resume Next
+Set ShapeByName = oShapes(sName)
+On Error GoTo 0
+End Function
 
 Private Function getBoardIndex(Optional slideIndex As Integer) As Integer
 ' Reports which Jeopardy number, starting with "1"
@@ -395,7 +560,7 @@ Next k
 End Sub
 
 Sub ClearThisSlidesTileAndGoToNext()
-    Call TimerModule.StopCountdown
+    Call StopCountdownVideo
     Call hideTileOnBoard(getSlideColumn, getSlideRow)
     Call DefaultAction
 
@@ -448,7 +613,7 @@ Dim horizontalSpacing As Integer
 Dim topMargin As Integer
 Dim verticalSpacing As Integer
 
-Call TimerModule.StopCountdown
+Call StopCountdownVideo
 
 MsgResult = MsgBox("This will reset the board and each player's score. " _
         & "Are you sure you want to do this?", vbYesNo)

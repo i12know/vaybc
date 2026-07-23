@@ -141,13 +141,15 @@ Sub setTimerDelay()
 End Sub
 ```
 
-**Digital countdown (new):** `VBA/TimerModule.bas` adds a numeric 10-second countdown with the re-buzz rule: clicking a red Incorrect button deducts the score *and* restarts the countdown at 10 for the next contestant; a green Correct button stops it. To wire it into a deck (once, in PowerPoint on Windows):
+**Linked video countdown (new):** `DufJeopardy.bas` supports a linked 10-second MP4 countdown shape named `CountdownVideo` on each question slide. Clicking a red Incorrect button deducts the score and rewinds the video for the next buzz-in; the host starts it again by clicking the video. A green Correct button stops and rewinds the video.
 
-1. Import `TimerModule.bas` into the VBA project (Alt+F11 > File > Import)
-2. On the Slide Master, add a text box named `CountdownDisplay` (large bold digits, empty text)
-3. Give a Start Timer shape the action **Insert > Action > Run macro > `StartCountdown`**
+To wire it into a deck:
 
-When time runs out the display shows **TIME!**, plays `Time-Up.wav` if present next to the presentation, and clears after a few seconds. See issue [#2](https://github.com/i12know/vaybc/issues/2) for the full design.
+1. Put `countdown_10s_1x1.mp4` in the same folder as the `.pptm`
+2. Add and position one linked video shape named `CountdownVideo` on a question slide
+3. Run `InstallLinkedCountdownVideos()` to recreate linked countdown video shapes on slides that have `JeopardyTheme`
+
+If the deck folder moves and PowerPoint loses the media links, keep the MP4 beside the `.pptm` and rerun `InstallLinkedCountdownVideos()`.
 
 ### Excel Template Format
 
@@ -167,12 +169,13 @@ Questions should be formatted in Excel as:
 vaybc/
 ├── VBA/
 │   ├── DufJeopardy.bas               # Main game logic (shared by both templates)
-│   ├── TimerModule.bas               # Digital 10-second countdown timer
-│   ├── copying.bas                   # GPL-3.0 license text
+│   ├── TimerModule.bas               # Experimental VBA countdown timer
+│   ├── copying.bas                   # AGPL-3.0 license text
 │   └── AdjustScoresBox.frm/.frx      # Manual score adjustment dialog
 ├── PowerPoint_Files/
 │   ├── VAY_Bible_Challenge_Official3teams.pptm    # 3 players, 5 categories
-│   └── VAY_Bible_Challenge_Practice8players.pptm  # 8 players, 6 categories
+│   ├── VAY_Bible_Challenge_Practice8players.pptm  # 8 players, 6 categories
+│   └── countdown_10s_1x1.mp4                      # Linked countdown video asset
 ├── Templates/
 │   └── VAY_Bible_Challenge_Practice.xlsx    # Fill out 5 categories instead of 6 for official competitions
 ├── Documentation/
@@ -264,11 +267,11 @@ We welcome contributions! Please:
   - Bumble created a GitHub for it.
 
 ### License
-This project is licensed under the **GNU General Public License v3.0 or later**.
+This project is licensed under the **GNU Affero General Public License v3.0 or later**.
 
 ```
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
+it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 ```
@@ -307,7 +310,7 @@ For questions about this implementation:
 
 ## 🎯 Future Enhancements
 
-- [ ] Count-down timer with numbers displayed on screen — VBA done (`VBA/TimerModule.bas`); still needs wiring into both .pptm decks, see issue [#2](https://github.com/i12know/vaybc/issues/2)
+- [ ] Wire the linked MP4 countdown into the production `.pptm` decks, see issue [#2](https://github.com/i12know/vaybc/issues/2)
 - [ ] "Revert" Button to revert the scoring should the judges approved a challenge
 
 ---
