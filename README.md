@@ -141,15 +141,15 @@ Sub setTimerDelay()
 End Sub
 ```
 
-**Linked video countdown (new):** `DufJeopardy.bas` supports a linked 10-second MP4 countdown shape named `CountdownVideo` on each question slide. Clicking a red Incorrect button deducts the score and rewinds the video for the next buzz-in; the host starts it again by clicking the video. A green Correct button stops and rewinds the video.
+**Linked video countdown:** `DufJeopardy.bas` supports linked MP4 countdown shapes named `CountdownVideo`. Normal question slides use a manually started 10-second countdown. Final Jeopardy slides use an automatically started 30-second countdown, and Daily Double target questions are switched to an automatically started 30-second countdown after the wager is entered. Clicking a red Incorrect button deducts the score and rewinds the current countdown for the next buzz-in; the host can start it again by clicking the video. A green Correct button stops and rewinds the video.
 
 To wire it into a deck:
 
-1. Put `countdown_10s_1x1.mp4` in the same folder as the `.pptm`
+1. Put `countdown_10s_1x1.mp4` and `countdown_30s_1x1.mp4` in the same folder as the `.pptm`
 2. Add and position one linked video shape named `CountdownVideo` on a question slide
 3. Run `InstallLinkedCountdownVideos()` to recreate linked countdown video shapes on slides that have `JeopardyTheme`
 
-If the deck folder moves and PowerPoint loses the media links, keep the MP4 beside the `.pptm` and rerun `InstallLinkedCountdownVideos()`.
+If the deck folder moves and PowerPoint loses the media links, keep both MP4 files beside the `.pptm` and rerun `InstallLinkedCountdownVideos()`.
 
 ### Excel Template Format
 
@@ -175,7 +175,8 @@ vaybc/
 ├── PowerPoint_Files/
 │   ├── VAY_Bible_Challenge_Official3teams.pptm    # 3 players, 5 categories
 │   ├── VAY_Bible_Challenge_Practice8players.pptm  # 8 players, 6 categories
-│   └── countdown_10s_1x1.mp4                      # Linked countdown video asset
+│   ├── countdown_10s_1x1.mp4                      # Linked normal-question countdown video
+│   └── countdown_30s_1x1.mp4                      # Linked Final Jeopardy/Daily Double countdown video
 ├── Templates/
 │   └── VAY_Bible_Challenge_Practice.xlsx    # Fill out 5 categories instead of 6 for official competitions
 ├── Documentation/

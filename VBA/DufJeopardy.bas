@@ -38,7 +38,8 @@ Private Const TILE_H_SPACING = 114
 Private Const TILE_V_SPACING = 78
 Private Const DOLLAR_CHARACTER = "$"
 Private Const COUNTDOWN_VIDEO_SHAPE = "CountdownVideo"
-Private Const COUNTDOWN_VIDEO_FILE = "countdown_10s_1x1.mp4"
+Private Const COUNTDOWN_VIDEO_10_FILE = "countdown_10s_1x1.mp4"
+Private Const COUNTDOWN_VIDEO_30_FILE = "countdown_30s_1x1.mp4"
 Private Const JEOPARDY_THEME_SHAPE = "JeopardyTheme"
 
 Sub correctPlayer1()
@@ -325,9 +326,11 @@ End Sub
 Public Sub InstallLinkedCountdownVideos()
 Dim oTemplate As Shape
 Dim oSlide As Slide
-Dim oShape As Shape
+Dim s10Path As String
+Dim s30Path As String
 Dim sPath As String
-Dim iInstalled As Integer
+Dim i10Installed As Integer
+Dim i30Installed As Integer
 Dim iSkipped As Integer
 Dim sngLeft As Single
 Dim sngTop As Single
@@ -335,15 +338,17 @@ Dim sngWidth As Single
 Dim sngHeight As Single
 
 If ActivePresentation.Path = "" Then
-    MsgBox "Save the PowerPoint file first, then put " & COUNTDOWN_VIDEO_FILE & _
-        " in the same folder and run this macro again.", vbExclamation
+    MsgBox "Save the PowerPoint file first, then put the countdown MP4 files " & _
+        "in the same folder and run this macro again.", vbExclamation
     Exit Sub
 End If
 
-sPath = ActivePresentation.Path & "\" & COUNTDOWN_VIDEO_FILE
-If Dir(sPath) = "" Then
-    MsgBox "Could not find " & COUNTDOWN_VIDEO_FILE & " beside this PowerPoint file:" & _
-        Chr(13) & sPath, vbExclamation
+s10Path = CountdownVideoPath(COUNTDOWN_VIDEO_10_FILE)
+s30Path = CountdownVideoPath(COUNTDOWN_VIDEO_30_FILE)
+If s10Path = "" Or s30Path = "" Then
+    MsgBox "Could not find both countdown MP4 files beside this PowerPoint file:" & _
+        Chr(13) & COUNTDOWN_VIDEO_10_FILE & _
+        Chr(13) & COUNTDOWN_VIDEO_30_FILE, vbExclamation
     Exit Sub
 End If
 
@@ -363,27 +368,144 @@ For Each oSlide In ActivePresentation.Slides
     If ShapeByName(oSlide.Shapes, JEOPARDY_THEME_SHAPE) Is Nothing Then
         iSkipped = iSkipped + 1
     Else
-        Call DeleteShapesNamed(oSlide.Shapes, COUNTDOWN_VIDEO_SHAPE)
-        On Error GoTo InstallFailed
-        Set oShape = oSlide.Shapes.AddMediaObject2(sPath, msoTrue, msoFalse, _
-            sngLeft, sngTop, sngWidth, sngHeight)
-        On Error GoTo 0
-        oShape.Name = COUNTDOWN_VIDEO_SHAPE
-        iInstalled = iInstalled + 1
+        If IsFinalJeopardyCountdownSlide(oSlide) Then
+            sPath = s30Path
+            i30Installed = i30Installed + 1
+        Else
+            sPath = s10Path
+            i10Installed = i10Installed + 1
+        End If
+        If Not InstallCountdownVideoOnSlide(oSlide, sPath, sngLeft, sngTop, sngWidth, sngHeight, _
+            IsFinalJeopardyCountdownSlide(oSlide)) Then
+            MsgBox "PowerPoint could not add the linked countdown video on slide " & _
+                Trim(Str(oSlide.slideIndex)) & ".", vbExclamation
+            Exit Sub
+        End If
     End If
 Next oSlide
 
-MsgBox "Linked " & Trim(Str(iInstalled)) & " countdown video shape(s) to:" & _
-    Chr(13) & sPath & Chr(13) & Chr(13) & _
+MsgBox "Linked " & Trim(Str(i10Installed)) & " question countdown video shape(s) to:" & _
+    Chr(13) & s10Path & Chr(13) & Chr(13) & _
+    "Linked " & Trim(Str(i30Installed)) & " Final Jeopardy countdown video shape(s) to:" & _
+    Chr(13) & s30Path & Chr(13) & Chr(13) & _
     "Skipped " & Trim(Str(iSkipped)) & " slide(s) without " & JEOPARDY_THEME_SHAPE & ".", _
     vbInformation
-Exit Sub
+End Sub
 
-InstallFailed:
-MsgBox "PowerPoint could not add the linked countdown video on slide " & _
-    Trim(Str(oSlide.slideIndex)) & ".", vbExclamation
+Private Function CountdownVideoPath(ByVal sFileName As String) As String
+Dim sPath As String
+
+If ActivePresentation.Path = "" Then Exit Function
+
+sPath = ActivePresentation.Path & "\" & sFileName
+If Dir(sPath) <> "" Then CountdownVideoPath = sPath
+End Function
+
+Private Function InstallCountdownVideoOnSlide(ByVal oSlide As Slide, ByVal sPath As String, _
+    ByVal sngLeft As Single, ByVal sngTop As Single, ByVal sngWidth As Single, _
+    ByVal sngHeight As Single, Optional ByVal bPlayOnEntry As Boolean = False) As Boolean
+Dim oShape As Shape
+
+If sPath = "" Then Exit Function
+
+Call DeleteShapesNamed(oSlide.Shapes, COUNTDOWN_VIDEO_SHAPE)
+
+On Error GoTo Bail
+Set oShape = oSlide.Shapes.AddMediaObject2(sPath, msoTrue, msoFalse, _
+    sngLeft, sngTop, sngWidth, sngHeight)
+On Error GoTo 0
+oShape.Name = COUNTDOWN_VIDEO_SHAPE
+Call ConfigureCountdownVideoPlayback(oSlide, oShape, bPlayOnEntry)
+
+InstallCountdownVideoOnSlide = True
+Exit Function
+
+Bail:
+InstallCountdownVideoOnSlide = False
+End Function
+
+Private Sub ConfigureCountdownVideoPlayback(ByVal oSlide As Slide, ByVal oShape As Shape, _
+    ByVal bPlayOnEntry As Boolean)
+Dim i As Integer
+Dim oEffect As Effect
+
+On Error Resume Next
+With oShape.AnimationSettings.PlaySettings
+    .PlayOnEntry = IIf(bPlayOnEntry, msoTrue, msoFalse)
+    .RewindMovie = msoTrue
+    .LoopUntilStopped = msoFalse
+    .HideWhileNotPlaying = msoFalse
+End With
+
+If bPlayOnEntry Then
+    Set oEffect = Nothing
+    For i = 1 To oSlide.TimeLine.MainSequence.Count
+        If oSlide.TimeLine.MainSequence.Item(i).Shape.Name = oShape.Name Then
+            Set oEffect = oSlide.TimeLine.MainSequence.Item(i)
+            Exit For
+        End If
+    Next i
+
+    If oEffect Is Nothing Then
+        Set oEffect = oSlide.TimeLine.MainSequence.AddEffect(oShape, _
+            msoAnimEffectMediaPlay, , msoAnimTriggerWithPrevious)
+    End If
+
+    oEffect.Timing.TriggerType = msoAnimTriggerWithPrevious
+    oEffect.Timing.TriggerDelayTime = 0
+End If
 On Error GoTo 0
 End Sub
+
+Private Function UseCountdownVideoFileOnSlide(ByVal oSlide As Slide, ByVal sFileName As String, _
+    Optional ByVal bPlayOnEntry As Boolean = False) As Boolean
+Dim oShape As Shape
+Dim oTemplate As Shape
+Dim sPath As String
+
+sPath = CountdownVideoPath(sFileName)
+If sPath = "" Then Exit Function
+
+Set oShape = ShapeByName(oSlide.Shapes, COUNTDOWN_VIDEO_SHAPE)
+If Not oShape Is Nothing Then
+    Set oTemplate = oShape
+Else
+    Set oTemplate = FindCountdownVideoTemplateShape()
+End If
+
+If oTemplate Is Nothing Then Exit Function
+
+UseCountdownVideoFileOnSlide = InstallCountdownVideoOnSlide(oSlide, sPath, _
+    oTemplate.Left, oTemplate.Top, oTemplate.Width, oTemplate.Height, bPlayOnEntry)
+End Function
+
+Private Function IsFinalJeopardyCountdownSlide(ByVal oSlide As Slide) As Boolean
+If oSlide.Name = "FinalJeopardyResponseSlide" Then
+    IsFinalJeopardyCountdownSlide = True
+    Exit Function
+End If
+
+IsFinalJeopardyCountdownSlide = SlideContainsText(oSlide, "Final") And _
+    SlideContainsText(oSlide, "Jeopardy")
+End Function
+
+Private Function SlideContainsText(ByVal oSlide As Slide, ByVal sText As String) As Boolean
+Dim oShape As Shape
+
+For Each oShape In oSlide.Shapes
+    On Error Resume Next
+    If oShape.HasTextFrame Then
+        If oShape.TextFrame.HasText Then
+            If InStr(1, oShape.TextFrame.TextRange.Text, sText, vbTextCompare) > 0 Then
+                SlideContainsText = True
+                On Error GoTo 0
+                Exit Function
+            End If
+        End If
+    End If
+    On Error GoTo 0
+Next oShape
+End Function
 
 Private Function FindCountdownVideoShape() As Shape
 Dim oSlide As Slide
@@ -612,6 +734,7 @@ Dim leftMargin As Integer
 Dim horizontalSpacing As Integer
 Dim topMargin As Integer
 Dim verticalSpacing As Integer
+Dim oQuestionSlide As Slide
 
 Call StopCountdownVideo
 
@@ -636,7 +759,9 @@ If MsgResult = vbYes Then
                 For r = 1 To ROW_COUNT
                     On Error GoTo ErrorHandlerContinueToNextShape
                     sValue = .Shapes("c" + Trim(Str(c)) + "r" + Trim(Str(r)) + "00Text").TextFrame.TextRange.Text
-                    getSlide(n, c, r).Shapes("slideValue").TextFrame.TextRange.Text = sValue
+                    Set oQuestionSlide = getSlide(n, c, r)
+                    oQuestionSlide.Shapes("slideValue").TextFrame.TextRange.Text = sValue
+                    Call UseCountdownVideoFileOnSlide(oQuestionSlide, COUNTDOWN_VIDEO_10_FILE)
 
 ContinueToNextShape:
                 Next
@@ -751,6 +876,7 @@ Dim sDailyDoubleSlide As Slide
 Dim boardIndex As Integer
 Dim dailyDoubleIndex As Integer
 Dim slideObject As Object
+Dim oTargetSlide As Slide
 
 '' MsgBox ("Entering Daily Double Public Sub.")
 
@@ -783,7 +909,9 @@ With ActivePresentation.SlideShowWindow.View.Slide
     DDr = Int(Val(.Tags("DailyDoubleRow")))
 End With
 
-With getSlide(boardIndex, DDc + 1, DDr + 1)
+Set oTargetSlide = getSlide(boardIndex, DDc + 1, DDr + 1)
+
+With oTargetSlide
     For Each oShape In .Shapes
         If oShape.Name = "slideValue" Then
             oShape.TextFrame.TextRange.Text = DOLLAR_CHARACTER + Trim(Str(iWager))
@@ -792,8 +920,11 @@ With getSlide(boardIndex, DDc + 1, DDr + 1)
     Next
 End With
 
+If Not UseCountdownVideoFileOnSlide(oTargetSlide, COUNTDOWN_VIDEO_30_FILE, True) Then
+    MsgBox "Could not switch the Daily Double question to the 30-second countdown.", vbExclamation
+End If
 
-ActivePresentation.SlideShowWindow.View.GotoSlide getSlide(boardIndex, DDc + 1, DDr + 1).slideIndex
+ActivePresentation.SlideShowWindow.View.GotoSlide oTargetSlide.slideIndex
 
 End Sub
 
