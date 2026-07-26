@@ -331,6 +331,7 @@ Dim s30Path As String
 Dim sPath As String
 Dim i10Installed As Integer
 Dim i30Installed As Integer
+Dim iFinalIntroSkipped As Integer
 Dim iSkipped As Integer
 Dim sngLeft As Single
 Dim sngTop As Single
@@ -367,6 +368,9 @@ sngHeight = oTemplate.Height
 For Each oSlide In ActivePresentation.Slides
     If ShapeByName(oSlide.Shapes, JEOPARDY_THEME_SHAPE) Is Nothing Then
         iSkipped = iSkipped + 1
+    ElseIf IsFinalJeopardyIntroSlide(oSlide) Then
+        Call DeleteShapesNamed(oSlide.Shapes, COUNTDOWN_VIDEO_SHAPE)
+        iFinalIntroSkipped = iFinalIntroSkipped + 1
     Else
         If IsFinalJeopardyCountdownSlide(oSlide) Then
             sPath = s30Path
@@ -388,6 +392,8 @@ MsgBox "Linked " & Trim(Str(i10Installed)) & " question countdown video shape(s)
     Chr(13) & s10Path & Chr(13) & Chr(13) & _
     "Linked " & Trim(Str(i30Installed)) & " Final Jeopardy countdown video shape(s) to:" & _
     Chr(13) & s30Path & Chr(13) & Chr(13) & _
+    "Removed countdown video from " & Trim(Str(iFinalIntroSkipped)) & _
+    " Final Jeopardy intro slide(s)." & Chr(13) & Chr(13) & _
     "Skipped " & Trim(Str(iSkipped)) & " slide(s) without " & JEOPARDY_THEME_SHAPE & ".", _
     vbInformation
 End Sub
@@ -480,13 +486,12 @@ UseCountdownVideoFileOnSlide = InstallCountdownVideoOnSlide(oSlide, sPath, _
 End Function
 
 Private Function IsFinalJeopardyCountdownSlide(ByVal oSlide As Slide) As Boolean
-If oSlide.Name = "FinalJeopardyResponseSlide" Then
-    IsFinalJeopardyCountdownSlide = True
-    Exit Function
-End If
+IsFinalJeopardyCountdownSlide = (oSlide.Name = "FinalJeopardyResponseSlide")
+End Function
 
-IsFinalJeopardyCountdownSlide = SlideContainsText(oSlide, "Final") And _
-    SlideContainsText(oSlide, "Jeopardy")
+Private Function IsFinalJeopardyIntroSlide(ByVal oSlide As Slide) As Boolean
+IsFinalJeopardyIntroSlide = (Not IsFinalJeopardyCountdownSlide(oSlide)) And _
+    SlideContainsText(oSlide, "Final") And SlideContainsText(oSlide, "Jeopardy")
 End Function
 
 Private Function SlideContainsText(ByVal oSlide As Slide, ByVal sText As String) As Boolean

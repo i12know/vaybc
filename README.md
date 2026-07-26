@@ -141,7 +141,7 @@ Sub setTimerDelay()
 End Sub
 ```
 
-**Linked video countdown:** `DufJeopardy.bas` supports linked MP4 countdown shapes named `CountdownVideo`. Normal question slides use a manually started 10-second countdown. Final Jeopardy slides use an automatically started 30-second countdown, and Daily Double target questions are switched to an automatically started 30-second countdown after the wager is entered. Clicking a red Incorrect button deducts the score and rewinds the current countdown for the next buzz-in; the host can start it again by clicking the video. A green Correct button stops and rewinds the video.
+**Linked video countdown:** `DufJeopardy.bas` supports linked MP4 countdown shapes named `CountdownVideo`. Normal question slides use a manually started 10-second countdown. The Final Jeopardy intro/category slide has no countdown; the Final Jeopardy prompt slide uses an automatically started 30-second countdown. Daily Double target questions are switched to an automatically started 30-second countdown after the wager is entered. Clicking a red Incorrect button deducts the score and rewinds the current countdown for the next buzz-in; the host can start it again by clicking the video. A green Correct button stops and rewinds the video.
 
 To wire it into a deck:
 
